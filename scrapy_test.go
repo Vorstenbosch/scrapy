@@ -1,17 +1,25 @@
 package scrapy
 
-import "testing"
+import (
+	"context"
+	"io"
+	"log"
+	"net/http"
+	"testing"
+)
+
+var server http.Server
 
 func TestScrape(t *testing.T) {
 	// Given
-	// TODO: create a webapp stub for testing
-	endpoint := "http://aap.nl/"
+	setup()
+	endpoint := "http://localhost:5555/"
 	selector := Selector{
 		typeOfSelector: "xpath",
-		value:          "//h2[@class='heading-lg']",
+		value:          "//div",
 	}
 
-	expectedResult := "AAP geeft dieren weer een toekomst"
+	expectedResult := "Hello world"
 
 	// When
 	result, err := Scrape(endpoint, selector)
@@ -23,6 +31,33 @@ func TestScrape(t *testing.T) {
 
 	if result != expectedResult {
 		t.Errorf("Scrape test failed as the result did not match '%s' but was '%s'", expectedResult, result)
+	}
+
+}
+
+func setup() {
+	defer tearDown()
+	server := &http.Server{Addr: ":5555"}
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		io.WriteString(w, "<div>Hello world</div>")
+	})
+
+	go func() {
+		// always returns error. ErrServerClosed on graceful close
+		if err := server.ListenAndServe(); err != http.ErrServerClosed {
+			// unexpected error. port in use?
+			log.Fatalf("ListenAndServe(): %v", err)
+		}
+	}()
+}
+
+func tearDown() {
+	// now close the server gracefully ("shutdown")
+	// timeout could be given with a proper context
+	// (in real world you shouldn't use TODO()).
+	if err := server.Shutdown(context.TODO()); err != nil {
+		panic(err) // failure/timeout shutting down the server gracefully
 	}
 
 }

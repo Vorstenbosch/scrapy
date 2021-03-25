@@ -35,8 +35,8 @@ func getEndpointBody(endpoint string) ([]byte, error) {
 
 	if err == nil {
 		body, err = ioutil.ReadAll(response.Body)
+		defer response.Body.Close()
 	}
-	defer response.Body.Close()
 
 	return body, err
 }
