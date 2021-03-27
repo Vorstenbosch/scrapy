@@ -5,27 +5,47 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"regexp"
+	"time"
 
 	"launchpad.net/xmlpath"
 )
 
 type Selector struct {
-	typeOfSelector string
-	value          string
+	TypeOfSelector string
+	Value          string
+}
+
+type ScrapeResult struct {
+	TypeOfSelector string
+	Value          string
+	Result         string
+	Error          error
+	Time           time.Time
 }
 
 // Scrape will use the selector to scrape the endpoint and return the result of the selector or an error.
-func Scrape(endpoint string, selector Selector) (string, error) {
-	var scrapedValue string
+func Scrape(endpoint string, selectors []Selector) []ScrapeResult {
+	var scrapeResults = []ScrapeResult{}
 	var err error
 
 	body, err := getEndpointBody(endpoint)
 
 	if err == nil {
-		scrapedValue, err = scrapeValue(body, selector)
+		for i := range selectors {
+			scrapedValue, err := scrapeValue(body, selectors[i])
+
+			scrapeResults = append(scrapeResults, ScrapeResult{
+				TypeOfSelector: selectors[i].TypeOfSelector,
+				Value:          selectors[i].Value,
+				Result:         scrapedValue,
+				Error:          err,
+				Time:           time.Now(),
+			})
+		}
 	}
 
-	return scrapedValue, err
+	return scrapeResults
 }
 
 func getEndpointBody(endpoint string) ([]byte, error) {
@@ -42,19 +62,27 @@ func getEndpointBody(endpoint string) ([]byte, error) {
 }
 
 func scrapeValue(document []byte, selector Selector) (string, error) {
-	var value string
+	var result string
 	var err error
 
-	switch selector.typeOfSelector {
+	switch selector.TypeOfSelector {
 	case "xpath":
-		path := xmlpath.MustCompile(selector.value)
+		path := xmlpath.MustCompile(selector.Value)
 		root, err := xmlpath.ParseHTML(bytes.NewReader(document))
 		if err == nil {
-			value, _ = path.String(root)
+			result, _ = path.String(root)
+		}
+	case "regex":
+		regex := regexp.MustCompile(selector.Value)
+		matches := regex.FindSubmatch(document)
+		if len(matches) == 2 {
+			result = string(matches[1])
+		} else {
+			err = fmt.Errorf("Regex selector resulted into multiple group matches ('%v'), only one is allowed", len(matches)-1)
 		}
 	default:
-		err = fmt.Errorf("Selector type '%s' is not supported", selector.typeOfSelector)
+		err = fmt.Errorf("Selector type '%s' is not supported", selector.TypeOfSelector)
 	}
 
-	return value, err
+	return result, err
 }
