@@ -12,11 +12,13 @@ import (
 )
 
 type Selector struct {
+	Name           string
 	TypeOfSelector string
 	Value          string
 }
 
 type ScrapeResult struct {
+	Name           string
 	TypeOfSelector string
 	Value          string
 	Result         string
@@ -36,6 +38,7 @@ func Scrape(endpoint string, selectors []Selector) []ScrapeResult {
 			scrapedValue, err := scrapeValue(body, selectors[i])
 
 			scrapeResults = append(scrapeResults, ScrapeResult{
+				Name:           selectors[i].Name,
 				TypeOfSelector: selectors[i].TypeOfSelector,
 				Value:          selectors[i].Value,
 				Result:         scrapedValue,

@@ -16,6 +16,7 @@ func TestScrapeXpath(t *testing.T) {
 	// Given
 	endpoint := "http://localhost:5555/"
 	selector := Selector{
+		Name:           "xpath-scrape",
 		TypeOfSelector: "xpath",
 		Value:          "//div",
 	}
@@ -36,6 +37,10 @@ func TestScrapeXpath(t *testing.T) {
 
 	if result[0].Result != expectedResult {
 		t.Errorf("Scrape test failed as the result did not match '%s' but was '%s'", expectedResult, result)
+	}
+
+	if result[0].Name != "xpath-scrape" {
+		t.Errorf("Scrape test failed as the name did not match '%s' but was '%s'", "xpath-scrape", result)
 	}
 }
 
