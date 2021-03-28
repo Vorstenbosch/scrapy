@@ -23,7 +23,8 @@ func TestScrapeXpath(t *testing.T) {
 	expectedResult := "Hello world"
 
 	// When
-	result := Scrape(endpoint, []Selector{selector})
+	var result []ScrapeResult
+	Scrape(endpoint, []Selector{selector}, &result)
 
 	// Then
 	if len(result) != 1 {
@@ -54,7 +55,8 @@ func TestScrapeRegex(t *testing.T) {
 	expectedResult := "ello"
 
 	// When
-	result := Scrape(endpoint, []Selector{selector})
+	var result []ScrapeResult
+	Scrape(endpoint, []Selector{selector}, &result)
 
 	// Then
 	if len(result) != 1 {
@@ -79,7 +81,8 @@ func TestScrapeRegexMultipleMatches(t *testing.T) {
 	}
 
 	// When
-	result := Scrape(endpoint, []Selector{selector})
+	var result []ScrapeResult
+	Scrape(endpoint, []Selector{selector}, &result)
 
 	// Then
 	if len(result) != 1 {
@@ -104,7 +107,8 @@ func TestInvalidSelectorType(t *testing.T) {
 	}
 
 	// When
-	result := Scrape(endpoint, []Selector{selector})
+	var result []ScrapeResult
+	Scrape(endpoint, []Selector{selector}, &result)
 
 	// Then
 	if len(result) != 1 {
@@ -148,6 +152,6 @@ func tearDown() {
 
 func TestMain(m *testing.M) {
 	setup()
-	os.Exit(m.Run())
 	tearDown()
+	os.Exit(m.Run())
 }

@@ -1,6 +1,10 @@
-package scrapy
+package scrapyboss
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/vorstenbosch/scrapy/scrapy"
+)
 
 func TestScrapyConfig(t *testing.T) {
 	// Given
@@ -18,8 +22,8 @@ scrapeendpoints:
 		ScrapeEndpoints: []ScrapeEndpoint{
 			ScrapeEndpoint{
 				Endpoint: "http://localhost:5555",
-				Selectors: []Selector{
-					Selector{
+				Selectors: []scrapy.Selector{
+					scrapy.Selector{
 						Name:           "test",
 						TypeOfSelector: "xpath",
 						Value:          "//div",

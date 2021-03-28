@@ -26,8 +26,8 @@ type ScrapeResult struct {
 	Time           time.Time
 }
 
-// Scrape will use the selector to scrape the endpoint and return the result of the selector or an error.
-func Scrape(endpoint string, selectors []Selector) []ScrapeResult {
+// Scrape will use the selector to scrape the endpoint and place the result on the 'out'
+func Scrape(endpoint string, selectors []Selector, out *[]ScrapeResult) {
 	var scrapeResults = []ScrapeResult{}
 	var err error
 
@@ -48,7 +48,7 @@ func Scrape(endpoint string, selectors []Selector) []ScrapeResult {
 		}
 	}
 
-	return scrapeResults
+	*out = scrapeResults
 }
 
 func getEndpointBody(endpoint string) ([]byte, error) {

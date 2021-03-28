@@ -1,8 +1,9 @@
-package scrapy
+package scrapyboss
 
 import (
 	"fmt"
 
+	"github.com/vorstenbosch/scrapy/scrapy"
 	"gopkg.in/yaml.v2"
 )
 
@@ -15,7 +16,7 @@ type ScrapyBossConfig struct {
 
 type ScrapeEndpoint struct {
 	Endpoint  string
-	Selectors []Selector
+	Selectors []scrapy.Selector
 }
 
 func ParseConfig(b []byte) (ScrapyBossConfig, error) {
