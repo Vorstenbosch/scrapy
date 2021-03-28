@@ -10,7 +10,6 @@ import (
 )
 
 var server http.Server
-var handlerInitiated bool = false
 
 func TestScrapeXpath(t *testing.T) {
 	// Given
@@ -127,8 +126,6 @@ func setup() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, "<div>Hello world</div>")
 	})
-
-	handlerInitiated = true
 
 	go func() {
 		// always returns error. ErrServerClosed on graceful close
