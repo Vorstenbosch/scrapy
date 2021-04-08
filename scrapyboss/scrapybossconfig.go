@@ -25,9 +25,11 @@ func ParseConfig(b []byte) (ScrapyBossConfig, error) {
 
 	err = yaml.Unmarshal(b, &config)
 
-	if config.ScrapeIntervalInSeconds < 1 {
-		config = ScrapyBossConfig{}
-		err = fmt.Errorf("Config setting of 'ScrapeIntervalInSeconds' must be higher than 0")
+	if err == nil {
+		if config.ScrapeIntervalInSeconds < 1 {
+			config = ScrapyBossConfig{}
+			err = fmt.Errorf("Config setting of 'ScrapeIntervalInSeconds' must be higher than 0")
+		}
 	}
 
 	return config, err

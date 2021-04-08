@@ -54,6 +54,7 @@ func Scrape(endpoint string, selectors []Selector, out *[]ScrapeResult) {
 func getEndpointBody(endpoint string) ([]byte, error) {
 	var body []byte
 	var err error
+	// FIXME: configure the clients with timeouts
 	response, err := http.Get(endpoint)
 
 	if err == nil {

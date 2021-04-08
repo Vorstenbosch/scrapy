@@ -129,7 +129,6 @@ func tearDown() {
 	if err := server.Shutdown(context.TODO()); err != nil {
 		panic(err) // failure/timeout shutting down the server gracefully
 	}
-
 }
 
 func TestMain(m *testing.M) {
