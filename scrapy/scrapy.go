@@ -33,21 +33,24 @@ func Scrape(endpoint string, selectors []Selector, out *[]ScrapeResult) {
 
 	body, err := getEndpointBody(endpoint)
 
+	sr := ScrapeResult{
+		Error: err,
+	}
+
 	if err == nil {
 		for i := range selectors {
 			scrapedValue, err := scrapeValue(body, selectors[i])
 
-			scrapeResults = append(scrapeResults, ScrapeResult{
-				Name:           selectors[i].Name,
-				TypeOfSelector: selectors[i].TypeOfSelector,
-				Value:          selectors[i].Value,
-				Result:         scrapedValue,
-				Error:          err,
-				Time:           time.Now(),
-			})
+			sr.Name = selectors[i].Name
+			sr.TypeOfSelector = selectors[i].TypeOfSelector
+			sr.Value = selectors[i].Value
+			sr.Result = scrapedValue
+			sr.Error = err
 		}
 	}
 
+	sr.Time = time.Now()
+	scrapeResults = append(scrapeResults, sr)
 	*out = scrapeResults
 }
 
