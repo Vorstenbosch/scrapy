@@ -1,2 +1,2 @@
 .vscode
-scrapy_integration_test.go
+*_integration_test.go

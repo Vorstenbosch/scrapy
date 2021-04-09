@@ -30,7 +30,6 @@ type ScrapeResult struct {
 
 // Scrape will use the selector to scrape the endpoint and place the result on the 'out'
 func Scrape(endpoint string, selectors []Selector, out *[]ScrapeResult) {
-	var scrapeResults = []ScrapeResult{}
 	var err error
 
 	body, err := getEndpointBody(endpoint)
@@ -52,8 +51,7 @@ func Scrape(endpoint string, selectors []Selector, out *[]ScrapeResult) {
 	}
 
 	sr.Time = time.Now()
-	scrapeResults = append(scrapeResults, sr)
-	*out = scrapeResults
+	*out = append(*out, sr)
 }
 
 func getEndpointBody(endpoint string) ([]byte, error) {

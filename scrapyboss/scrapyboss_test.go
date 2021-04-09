@@ -105,7 +105,7 @@ func TestScrapyBossIterations(t *testing.T) {
 		t.Errorf("Config 'ScrapeIntervalInSeconds' was not '5', as expected, but was '%v'", scrapyBoss.GetConfig().ScrapeIntervalInSeconds)
 	}
 
-	if len(scrapyBoss.GetScrapeData()) > 1 {
+	if len(*scrapyBoss.GetScrapeData()["http://localhost:5555"]) < 2 {
 		t.Errorf("Did not found multiple scrape results")
 	}
 }

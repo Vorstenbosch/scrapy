@@ -45,10 +45,13 @@ func (s *scrapyBoss) Stop() {
 func (s *scrapyBoss) collect(endpoints []ScrapeEndpoint, interval int) {
 	for s.running {
 		for i := range endpoints {
-			var d []scrapy.ScrapeResult
-			s.scrapeData[endpoints[i].Endpoint] = &d
-			go scrapy.Scrape(endpoints[i].Endpoint, endpoints[i].Selectors, &d)
+			if s.scrapeData[endpoints[i].Endpoint] == nil {
+				s.scrapeData[endpoints[i].Endpoint] = &[]scrapy.ScrapeResult{}
+			}
+
+			go scrapy.Scrape(endpoints[i].Endpoint, endpoints[i].Selectors, s.scrapeData[endpoints[i].Endpoint])
 		}
+
 		time.Sleep(time.Duration(s.config.ScrapeIntervalInSeconds) * time.Second)
 	}
 }
