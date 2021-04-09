@@ -97,6 +97,10 @@ func TestScrapyBossIterations(t *testing.T) {
 	time.Sleep(15 * time.Second)
 
 	// Then
+	if !scrapyBoss.IsRunning() {
+		t.Errorf("ScrapyBoss should be running but is indicating it is not")
+	}
+
 	if scrapyBoss.GetConfig().ScrapeIntervalInSeconds != 5 {
 		t.Errorf("Config 'ScrapeIntervalInSeconds' was not '5', as expected, but was '%v'", scrapyBoss.GetConfig().ScrapeIntervalInSeconds)
 	}
