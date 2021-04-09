@@ -7,7 +7,7 @@ Scrapy is a easy and simple scraping library.
 
 ### Scrapy
 To use Scrapy directly you need to call the 'Scrape' method with an endpoint to scrape and a list of selectors, e.g.:
-```bash
+```go
 endpoint := "http://localhost:5555/"
 	selector := Selector{
 		Name:           "xpath-scrape",
@@ -15,15 +15,15 @@ endpoint := "http://localhost:5555/"
 		Value:          "//div",
 	}
 
-	var result []ScrapeResult
-	Scrape(endpoint, []Selector{selector}, &result)
+var result []ScrapeResult
+Scrape(endpoint, []Selector{selector}, &result)
 ```
 
 ### ScrapyBoss
 ScrapyBoss serves as a lightweight scheduler for scrapes done by Scrapy. It can be configured by providing a yaml file or by creating the configuration directly from code. Once starting it will start scraping the endpoints according to the configured selectors based on the 'ScrapeIntervalInSeconds'.
 
 #### Config from code
-```bash
+```go
 config := ScrapyBossConfig{
 		ScrapeIntervalInSeconds: 10,
 		ScrapeEndpoints: []ScrapeEndpoint{
@@ -40,24 +40,23 @@ config := ScrapyBossConfig{
 		},
 	}
 
-	scrapyBoss := NewScrapyBoss(config)
-
-	scrapyBoss.Start()
+scrapyBoss := NewScrapyBoss(config)
+scrapyBoss.Start()
 ```
 #### Config from a configuration file
-```bash
-	data, err := ioutil.ReadFile("/path/to/the/config/file.yaml")
-	if err != nil {
-		log.Fatal(err)
-	}
+```go
+data, err := ioutil.ReadFile("/path/to/the/config/file.yaml")
+if err != nil {
+    log.Fatal(err)
+}
 
-	config, err := scrapyboss.ParseConfig(data)
-	if err != nil {
-		log.Fatal(err)
-	}
+config, err := scrapyboss.ParseConfig(data)
+if err != nil {
+    log.Fatal(err)
+}
 
-	scrapyBoss := scrapyboss.NewScrapyBoss(config)
-	scrapyBoss.Start()
+scrapyBoss := scrapyboss.NewScrapyBoss(config)
+scrapyBoss.Start()
 ```
 
 ## Selectors
