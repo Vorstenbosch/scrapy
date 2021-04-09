@@ -34,6 +34,10 @@ func (s *scrapyBoss) Start() error {
 	return err
 }
 
+func (s *scrapyBoss) IsRunning() bool {
+	return s.running
+}
+
 func (s *scrapyBoss) Stop() {
 	s.running = false
 }
