@@ -6,8 +6,10 @@ import (
 	"io/ioutil"
 	"net/http"
 	"regexp"
+	"strings"
 	"time"
 
+	"golang.org/x/net/html"
 	"launchpad.net/xmlpath"
 )
 
@@ -74,10 +76,26 @@ func scrapeValue(document []byte, selector Selector) (string, error) {
 
 	switch selector.TypeOfSelector {
 	case "xpath":
+		var xmlPathRoot *xmlpath.Node
+		var htmlRoot *html.Node
+
 		path := xmlpath.MustCompile(selector.Value)
-		root, err := xmlpath.ParseHTML(bytes.NewReader(document))
+
+		// In case we run into invalid xml we need to clean it first
+		reader := bytes.NewReader(document)
+		htmlRoot, err = html.Parse(reader)
+
+		var b bytes.Buffer
+		html.Render(&b, htmlRoot)
+
+		// We now have the cleaned version of the html page
+		xmlPathRoot, err = xmlpath.ParseHTML(strings.NewReader(b.String()))
 		if err == nil {
-			result, _ = path.String(root)
+			var found bool
+			result, found = path.String(xmlPathRoot)
+			if !found {
+				err = fmt.Errorf("Unable to find '%s'", selector.Value)
+			}
 		}
 	case "regex":
 		regex := regexp.MustCompile(selector.Value)
