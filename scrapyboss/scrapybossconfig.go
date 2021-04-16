@@ -12,6 +12,8 @@ import (
 type ScrapyBossConfig struct {
 	ScrapeEndpoints         []ScrapeEndpoint
 	ScrapeIntervalInSeconds int
+	IdleConnectionPool      int
+	ScrapeTimeoutInSeconds  int
 }
 
 type ScrapeEndpoint struct {
@@ -25,12 +27,25 @@ func ParseConfig(b []byte) (ScrapyBossConfig, error) {
 
 	err = yaml.Unmarshal(b, &config)
 
-	if err == nil {
-		if config.ScrapeIntervalInSeconds < 1 {
-			config = ScrapyBossConfig{}
-			err = fmt.Errorf("Config setting of 'ScrapeIntervalInSeconds' must be higher than 0")
-		}
+	return config, err
+}
+
+// ValidateConfig validates the config on a functional level
+// It prevents unwanted behaviour (e.g. DOS-ing a scrape target due to a invalid scrape interval)
+func ValidateConfig(c ScrapyBossConfig) []error {
+	var errorList []error
+
+	if c.ScrapeIntervalInSeconds < 1 {
+		errorList = append(errorList, fmt.Errorf("Config setting of 'ScrapeIntervalInSeconds' must be higher than 0"))
 	}
 
-	return config, err
+	if c.ScrapeIntervalInSeconds < c.ScrapeTimeoutInSeconds {
+		errorList = append(errorList, fmt.Errorf("Config setting of 'ScrapeIntervalInSeconds' must be higher than '%v'", c.ScrapeTimeoutInSeconds))
+	}
+
+	if c.IdleConnectionPool < 1 {
+		errorList = append(errorList, fmt.Errorf("Config setting of 'IdleConnectionPool' must be higher than '0' but '%v' was configured", c.IdleConnectionPool))
+	}
+
+	return errorList
 }

@@ -28,11 +28,30 @@ type ScrapeResult struct {
 	Time           time.Time
 }
 
+type ScrapeClient struct {
+	HttpClient *http.Client
+}
+
+func NewScrapeClient() *ScrapeClient {
+	transport := &http.Transport{
+		MaxIdleConns:       10,
+		IdleConnTimeout:    30 * time.Second,
+		DisableCompression: true,
+	}
+
+	client := &http.Client{
+		Transport: transport,
+		Timeout:   30 * time.Second,
+	}
+
+	return &ScrapeClient{HttpClient: client}
+}
+
 // Scrape will use the selector to scrape the endpoint and place the result on the 'out'
-func Scrape(endpoint string, selectors []Selector, out *[]ScrapeResult) {
+func (c *ScrapeClient) Scrape(endpoint string, selectors []Selector, out *[]ScrapeResult) {
 	var err error
 
-	body, err := getEndpointBody(endpoint)
+	body, err := c.getEndpointBody(endpoint)
 
 	sr := ScrapeResult{
 		Error: err,
@@ -54,11 +73,11 @@ func Scrape(endpoint string, selectors []Selector, out *[]ScrapeResult) {
 	*out = append(*out, sr)
 }
 
-func getEndpointBody(endpoint string) ([]byte, error) {
+func (c *ScrapeClient) getEndpointBody(endpoint string) ([]byte, error) {
 	var body []byte
 	var err error
-	// FIXME: configure the clients with timeouts
-	response, err := http.Get(endpoint)
+
+	response, err := c.HttpClient.Get(endpoint)
 
 	if err == nil {
 		body, err = ioutil.ReadAll(response.Body)

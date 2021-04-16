@@ -18,6 +18,8 @@ func TestScrapyBossCreation(t *testing.T) {
 	// Given
 	config := ScrapyBossConfig{
 		ScrapeIntervalInSeconds: 10,
+		ScrapeTimeoutInSeconds:  3,
+		IdleConnectionPool:      1,
 		ScrapeEndpoints: []ScrapeEndpoint{
 			ScrapeEndpoint{
 				Endpoint: "http://localhost:5555",
@@ -38,6 +40,8 @@ func TestScrapyBoss(t *testing.T) {
 	// Given
 	config := ScrapyBossConfig{
 		ScrapeIntervalInSeconds: 10,
+		ScrapeTimeoutInSeconds:  3,
+		IdleConnectionPool:      1,
 		ScrapeEndpoints: []ScrapeEndpoint{
 			ScrapeEndpoint{
 				Endpoint: "http://localhost:5555",
@@ -58,13 +62,9 @@ func TestScrapyBoss(t *testing.T) {
 	scrapyBoss.Start()
 	defer scrapyBoss.Stop()
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	// Then
-	if scrapyBoss.GetConfig().ScrapeIntervalInSeconds != 10 {
-		t.Errorf("Config 'ScrapeIntervalInSeconds' was not '10', as expected, but was '%v'", scrapyBoss.GetConfig().ScrapeIntervalInSeconds)
-	}
-
 	if len(scrapyBoss.GetScrapeData()) == 0 {
 		t.Errorf("Scrape data was empty")
 	}
@@ -73,7 +73,9 @@ func TestScrapyBoss(t *testing.T) {
 func TestScrapyBossIterations(t *testing.T) {
 	// Given
 	config := ScrapyBossConfig{
-		ScrapeIntervalInSeconds: 5,
+		ScrapeIntervalInSeconds: 3,
+		ScrapeTimeoutInSeconds:  2,
+		IdleConnectionPool:      1,
 		ScrapeEndpoints: []ScrapeEndpoint{
 			ScrapeEndpoint{
 				Endpoint: "http://localhost:5555",
@@ -94,15 +96,15 @@ func TestScrapyBossIterations(t *testing.T) {
 	scrapyBoss.Start()
 	defer scrapyBoss.Stop()
 
-	time.Sleep(15 * time.Second)
+	time.Sleep(7 * time.Second)
 
 	// Then
 	if !scrapyBoss.IsRunning() {
 		t.Errorf("ScrapyBoss should be running but is indicating it is not")
 	}
 
-	if scrapyBoss.GetConfig().ScrapeIntervalInSeconds != 5 {
-		t.Errorf("Config 'ScrapeIntervalInSeconds' was not '5', as expected, but was '%v'", scrapyBoss.GetConfig().ScrapeIntervalInSeconds)
+	if scrapyBoss.GetConfig().ScrapeIntervalInSeconds != 3 {
+		t.Errorf("Config 'ScrapeIntervalInSeconds' was not '3', as expected, but was '%v'", scrapyBoss.GetConfig().ScrapeIntervalInSeconds)
 	}
 
 	if len(*scrapyBoss.GetScrapeData()["http://localhost:5555"]) < 2 {

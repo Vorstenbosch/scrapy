@@ -2,6 +2,7 @@ package scrapy
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -21,10 +22,11 @@ func TestScrapeXpath(t *testing.T) {
 	}
 
 	expectedResult := "Hello world"
+	c := NewScrapeClient()
 
 	// When
 	var result []ScrapeResult
-	Scrape(endpoint, []Selector{selector}, &result)
+	c.Scrape(endpoint, []Selector{selector}, &result)
 
 	// Then
 	if len(result) != 1 {
@@ -44,6 +46,72 @@ func TestScrapeXpath(t *testing.T) {
 	}
 }
 
+// The xpath library failed on invalid html pages. Therefore we are now 'fixing' the scrape target
+//   before applying the xpatch selector. This test is testing xpath scraping on invalid html.
+func TestScrapeXpathInvalidHtml(t *testing.T) {
+	// Given
+	endpoint := "http://localhost:5555/invalid-html"
+	selector := Selector{
+		Name:           "xpath-scrape",
+		TypeOfSelector: "xpath",
+		Value:          "//div",
+	}
+
+	expectedResult := "Hello world"
+	c := NewScrapeClient()
+
+	// When
+	var result []ScrapeResult
+	c.Scrape(endpoint, []Selector{selector}, &result)
+
+	// Then
+	if len(result) != 1 {
+		t.Errorf("Scrape test failed due to incorrect result list length")
+	}
+
+	if result[0].Error != nil {
+		t.Errorf("Scrape test failed due to unexpected error '%v'", result[0].Error)
+	}
+
+	if result[0].Result != expectedResult {
+		t.Errorf("Scrape test failed as the result did not match '%s' but was '%s'", expectedResult, result)
+	}
+
+	if result[0].Name != "xpath-scrape" {
+		t.Errorf("Scrape test failed as the name did not match '%s' but was '%s'", "xpath-scrape", result)
+	}
+}
+
+func TestScrapeXpathNotFound(t *testing.T) {
+	// Given
+	endpoint := "http://localhost:5555/invalid-html"
+	selector := Selector{
+		Name:           "xpath-scrape",
+		TypeOfSelector: "xpath",
+		Value:          "//table",
+	}
+
+	expectedResult := fmt.Errorf("Unable to find '//table'")
+	c := NewScrapeClient()
+
+	// When
+	var result []ScrapeResult
+	c.Scrape(endpoint, []Selector{selector}, &result)
+
+	// Then
+	if len(result) != 1 {
+		t.Errorf("Scrape test failed due to incorrect result list length")
+	}
+
+	if result[0].Error == fmt.Errorf("Unable to find '//table'") {
+		t.Errorf("Scrape test failed, expected error '%v' but received '%v'", expectedResult, result[0].Error)
+	}
+
+	if result[0].Name != "xpath-scrape" {
+		t.Errorf("Scrape test failed as the name did not match '%s' but was '%s'", "xpath-scrape", result)
+	}
+}
+
 func TestScrapeRegex(t *testing.T) {
 	// Given
 	endpoint := "http://localhost:5555/"
@@ -53,10 +121,11 @@ func TestScrapeRegex(t *testing.T) {
 	}
 
 	expectedResult := "ello"
+	c := NewScrapeClient()
 
 	// When
 	var result []ScrapeResult
-	Scrape(endpoint, []Selector{selector}, &result)
+	c.Scrape(endpoint, []Selector{selector}, &result)
 
 	// Then
 	if len(result) != 1 {
@@ -72,63 +141,15 @@ func TestScrapeRegex(t *testing.T) {
 	}
 }
 
-func TestScrapeRegexMultipleMatches(t *testing.T) {
-	// Given
-	endpoint := "http://localhost:5555/"
-	selector := Selector{
-		TypeOfSelector: "regex",
-		Value:          "^(.)(.)+$",
-	}
-
-	// When
-	var result []ScrapeResult
-	Scrape(endpoint, []Selector{selector}, &result)
-
-	// Then
-	if len(result) != 1 {
-		t.Errorf("Scrape test failed due to incorrect result list length")
-	}
-
-	if result[0].Error == nil {
-		t.Errorf("Scrape test failed due to missing error")
-	}
-
-	if result[0].Error.Error() != "Regex selector resulted into multiple group matches ('2'), only one is allowed" {
-		t.Errorf("Error is not as expected but is '%s'", result[0].Error.Error())
-	}
-}
-
-func TestInvalidSelectorType(t *testing.T) {
-	// Given
-	endpoint := "http://localhost:5555/"
-	selector := Selector{
-		TypeOfSelector: "NOT_VALID",
-		Value:          "//div",
-	}
-
-	// When
-	var result []ScrapeResult
-	Scrape(endpoint, []Selector{selector}, &result)
-
-	// Then
-	if len(result) != 1 {
-		t.Errorf("Scrape test failed due to incorrect result list length")
-	}
-
-	if result[0].Error == nil {
-		t.Errorf("Scrape test failed due to missing error")
-	}
-
-	if result[0].Error.Error() != "Selector type 'NOT_VALID' is not supported" {
-		t.Errorf("Error is not as expected but is '%s'", result[0].Error.Error())
-	}
-}
-
 func setup() {
 	server := &http.Server{Addr: ":5555"}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, "<div>Hello world</div>")
+	})
+
+	http.HandleFunc("/invalid-html", func(w http.ResponseWriter, r *http.Request) {
+		io.WriteString(w, "<div>Hello world</div></ul>")
 	})
 
 	go func() {

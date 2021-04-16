@@ -6,10 +6,12 @@ import (
 	"github.com/vorstenbosch/scrapy/scrapy"
 )
 
-func TestScrapyConfig(t *testing.T) {
+func TestParseScrapyConfig(t *testing.T) {
 	// Given
 	yamlConfig := `
-scrapeintervalinseconds: 1
+scrapeintervalinseconds: 2
+idleconnectionpool: 1
+scrapetimeoutinseconds: 1
 scrapeendpoints: 
   - endpoint: http://localhost:5555
     selectors:
@@ -31,7 +33,9 @@ scrapeendpoints:
 				},
 			},
 		},
-		ScrapeIntervalInSeconds: 1,
+		ScrapeIntervalInSeconds: 2,
+		ScrapeTimeoutInSeconds:  1,
+		IdleConnectionPool:      1,
 	}
 
 	// When
@@ -54,30 +58,69 @@ scrapeendpoints:
 		t.Errorf("ParseConfig test failed because resulting config '%v' is not the same as what was expected '%v'", config, expectedConfig)
 	}
 
-	// TODO: add other assetions
+	if config.ScrapeTimeoutInSeconds != expectedConfig.ScrapeTimeoutInSeconds {
+		t.Errorf("ParseConfig test failed because resulting config '%v' is not the same as what was expected '%v'", config, expectedConfig)
+	}
+
+	if config.IdleConnectionPool != expectedConfig.IdleConnectionPool {
+		t.Errorf("ParseConfig test failed because resulting config '%v' is not the same as what was expected '%v'", config, expectedConfig)
+	}
+}
+
+func TestValidateConfig(t *testing.T) {
+	// Given
+	config := ScrapyBossConfig{
+		ScrapeEndpoints: []ScrapeEndpoint{
+			ScrapeEndpoint{
+				Endpoint: "http://localhost:5555",
+				Selectors: []scrapy.Selector{
+					scrapy.Selector{
+						Name:           "test",
+						TypeOfSelector: "xpath",
+						Value:          "//div",
+					},
+				},
+			},
+		},
+		ScrapeIntervalInSeconds: 2,
+		ScrapeTimeoutInSeconds:  1,
+		IdleConnectionPool:      1,
+	}
+
+	// When
+	errorList := ValidateConfig(config)
+
+	// Then
+	if len(errorList) != 0 {
+		t.Errorf("Expecting that the config was valid but errors '%v' where found", errorList)
+	}
 }
 
 func TestInvalidConfig(t *testing.T) {
 	// Given
-	yamlConfig := `
-scrapeintervalinseconds: 0
-scrapeendpoints: 
-  - endpoint: http://localhost:5555
-    selectors:
-      - name: test
-        typeofselector: xpath
-        value: //div
-`
-
-	// When
-	_, err := ParseConfig([]byte(yamlConfig))
-
-	// Then
-	if err == nil {
-		t.Errorf("ParseConfig test failed due to missing expected error")
+	config := ScrapyBossConfig{
+		ScrapeEndpoints: []ScrapeEndpoint{
+			ScrapeEndpoint{
+				Endpoint: "http://localhost:5555",
+				Selectors: []scrapy.Selector{
+					scrapy.Selector{
+						Name:           "test",
+						TypeOfSelector: "xpath",
+						Value:          "//div",
+					},
+				},
+			},
+		},
+		ScrapeIntervalInSeconds: -1,
+		ScrapeTimeoutInSeconds:  1,
+		IdleConnectionPool:      -4,
 	}
 
-	if err.Error() != "Config setting of 'ScrapeIntervalInSeconds' must be higher than 0" {
-		t.Errorf("ParseConfig test failed because expected error was not as expected '%v'", err)
+	// When
+	errorList := ValidateConfig(config)
+
+	// Then
+	if len(errorList) != 3 {
+		t.Errorf("Expected '3' errors but found only '%v' when validating the config", len(errorList))
 	}
 }
